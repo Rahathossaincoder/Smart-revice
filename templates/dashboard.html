@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f2f2;
+      margin: 0;
+      padding: 0;
+    }
+    .dashboard-container {
+      max-width: 600px;
+      margin: 40px auto;
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      padding: 2rem;
+      position: relative;
+    }
+    .dashboard-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .plus-btn {
+      font-size: 2rem;
+      background: #28a745;
+      color: #fff;
+      border: none;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.2s;
+    }
+    .plus-btn:hover {
+      background: #218838;
+    }
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 10;
+      left: 0; top: 0; width: 100vw; height: 100vh;
+      background: rgba(0,0,0,0.3);
+      justify-content: center;
+      align-items: center;
+    }
+    .modal-content {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 8px;
+      width: 320px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      position: relative;
+    }
+    .close {
+      position: absolute;
+      top: 10px; right: 15px;
+      font-size: 1.2rem;
+      cursor: pointer;
+      color: #888;
+    }
+    .topic-list {
+      margin-top: 2rem;
+    }
+    .topic-item {
+      background: #f9f9f9;
+      border-radius: 6px;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    .topic-item img {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      background: #eee;
+    }
+    .topic-info {
+      flex: 1;
+    }
+    .topic-info a {
+      color: #007bff;
+      text-decoration: none;
+    }
+    .topic-actions button { margin-right: 0.5rem; }
+    .search-bar { margin-bottom: 1rem; }
+    .logout-btn {
+      position: fixed;
+      left: 50%;
+      bottom: 40px;
+      transform: translateX(-50%);
+      background: #dc3545;
+      color: #fff;
+      padding: 0.7rem 2.5rem;
+      border-radius: 4px;
+      text-decoration: none;
+      font-size: 1.1rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      transition: background 0.2s;
+      z-index: 100;
+      text-align: center;
+      display: block;
+    }
+    .logout-btn:hover {
+      background: #b52a37;
+    }
+    .fancy-btn {
+      padding: 0.5rem 1.2rem;
+      border: none;
+      border-radius: 25px;
+      font-size: 1rem;
+      cursor: pointer;
+      margin-right: 0.5rem;
+      transition: 
+        background 0.2s, 
+        color 0.2s, 
+        box-shadow 0.2s, 
+        transform 0.1s;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.10);
+      outline: none;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    .delete-btn {
+      background: linear-gradient(90deg, #ff416c 0%, #ff4b2b 100%);
+      color: #fff;
+      border: none;
+    }
+    .delete-btn:hover {
+      background: linear-gradient(90deg, #ff4b2b 0%, #ff416c 100%);
+      box-shadow: 0 4px 16px rgba(255,65,108,0.15);
+      transform: scale(1.07) rotate(-2deg);
+    }
+    .edit-btn {
+      background: linear-gradient(90deg, #f9d423 0%, #ff4e50 100%);
+      color: #fff;
+      border: none;
+    }
+    .edit-btn:hover {
+      background: linear-gradient(90deg, #ff4e50 0%, #f9d423 100%);
+      box-shadow: 0 4px 16px rgba(249,212,35,0.15);
+      color: #fff;
+      transform: scale(1.07) rotate(2deg);
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard-container">
+    <div class="dashboard-header">
+      <h2>Dashboard</h2>
+      <div>
+        <button class="plus-btn" onclick="openModal()">+</button>
+      </div>
+    </div>
+    <form class="search-bar" method="get" action="/dashboard" autocomplete="off" style="position:relative;">
+      <input type="text" id="searchInput" name="search" placeholder="Search topics..." value="{{ search|default('') }}" autocomplete="off">
+      <button type="submit">Search</button>
+      <div id="suggestions" style="position:absolute;top:2.2rem;left:0;width:100%;background:#fff;border-radius:0 0 6px 6px;box-shadow:0 2px 8px rgba(0,0,0,0.08);z-index:10;"></div>
+    </form>
+    <div class="topic-list">
+      {% for topic in topics %}
+        <div class="topic-item">
+          <img src="{{ '/' + topic[3] if topic[3] else 'https://via.placeholder.com/60' }}" alt="topic image">
+          <div class="topic-info">
+            <strong>
+              <a href="{{ topic[2] }}" target="_blank" style="color:#007bff;text-decoration:underline;font-size:1.1rem;">
+                {{ topic[1] }}
+              </a>
+            </strong>
+          </div>
+          <div class="topic-actions">
+            <form method="post" action="/delete_topic/{{ topic[0] }}" style="display:inline;">
+              <button type="submit" class="fancy-btn delete-btn">🗑 Delete</button>
+            </form>
+            <button type="button" class="fancy-btn edit-btn" onclick="openEditModal({{ topic[0] }}, '{{ topic[1] }}', '{{ topic[2] }}')">✏️ Edit</button>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div> <!-- end of .dashboard-container -->
+
+  <a href="/logout" class="logout-btn">Logout</a>
+
+  <!-- Modal for adding topic -->
+  <div class="modal" id="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeModal()">&times;</span>
+      <h3>Add Topic</h3>
+      <form id="topicForm" method="post" enctype="multipart/form-data">
+        <input type="text" name="topicName" placeholder="Topic Name" required style="width:100%;margin-bottom:1rem;">
+        <input type="url" name="topicLink" placeholder="Link" required style="width:100%;margin-bottom:1rem;">
+        <input type="file" name="topicImage" accept="image/*" style="width:100%;margin-bottom:1rem;">
+        <button type="submit" style="width:100%;background:#28a745;color:#fff;padding:0.5rem;border:none;border-radius:4px;">Add</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal for editing topic -->
+  <div class="modal" id="editModal" style="display:none;">
+    <div class="modal-content">
+      <span class="close" onclick="closeEditModal()">&times;</span>
+      <h3>Edit Topic</h3>
+      <form id="editTopicForm" method="post">
+        <input type="text" name="editTopicName" id="editTopicName" required style="width:100%;margin-bottom:1rem;">
+        <input type="url" name="editTopicLink" id="editTopicLink" required style="width:100%;margin-bottom:1rem;">
+        <button type="submit" style="width:100%;background:#007bff;color:#fff;padding:0.5rem;border:none;border-radius:4px;">Save</button>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    function openModal() {
+      document.getElementById('modal').style.display = 'flex';
+    }
+    function closeModal() {
+      document.getElementById('modal').style.display = 'none';
+    }
+    function openEditModal(id, name, link) {
+      document.getElementById('editModal').style.display = 'flex';
+      document.getElementById('editTopicName').value = name;
+      document.getElementById('editTopicLink').value = link;
+      document.getElementById('editTopicForm').action = '/edit_topic/' + id;
+    }
+    function closeEditModal() {
+      document.getElementById('editModal').style.display = 'none';
+    }
+
+    const searchInput = document.getElementById('searchInput');
+    const suggestionsDiv = document.getElementById('suggestions');
+
+    searchInput.addEventListener('input', function() {
+      const query = this.value;
+      if (!query) {
+        suggestionsDiv.innerHTML = '';
+        return;
+      }
+      fetch(`/topic_suggestions?q=${encodeURIComponent(query)}`)
+        .then(res => res.json())
+        .then(suggestions => {
+          if (suggestions.length === 0) {
+            suggestionsDiv.innerHTML = '';
+            return;
+          }
+          suggestionsDiv.innerHTML = suggestions.map(s =>
+            `<div style="padding:0.5rem;cursor:pointer;" onclick="selectSuggestion('${s.replace(/'/g,"\\'")}')">${s}</div>`
+          ).join('');
+        });
+    });
+
+    function selectSuggestion(s) {
+      searchInput.value = s;
+      suggestionsDiv.innerHTML = '';
+    }
+    document.addEventListener('click', function(e) {
+      if (!searchInput.contains(e.target) && !suggestionsDiv.contains(e.target)) {
+        suggestionsDiv.innerHTML = '';
+      }
+    });
+  </script>
+</body>
+</html>

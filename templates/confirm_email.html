@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Confirm Email</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f2f2f2; display: flex; height: 100vh; justify-content: center; align-items: center; }
+    .confirm-container { background: #fff; padding: 2rem; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); width: 320px; }
+    .flash-message { color: red; text-align: center; margin-bottom: 1rem; }
+  </style>
+</head>
+<body>
+  <div class="confirm-container">
+    <h2>Confirm Your Email</h2>
+    {% with messages = get_flashed_messages() %}
+      {% if messages %}
+        <div class="flash-message">{{ messages[0] }}</div>
+      {% endif %}
+    {% endwith %}
+    <form method="post">
+      <input type="text" name="code" placeholder="Enter confirmation code" required style="width:100%;margin-bottom:1rem;">
+      <button type="submit" style="width:100%;background:#28a745;color:#fff;padding:0.5rem;border:none;border-radius:4px;">Confirm</button>
+    </form>
+  </div>
+</body>
+</html>
